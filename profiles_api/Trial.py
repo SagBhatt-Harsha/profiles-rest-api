@@ -62,7 +62,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
 
     # By default, the USERNAME_FIELD stores 'username'. We are Overriding that and storing 'email' in this Field. This means that when we authenticate users instead of them providing a username and password they're just going to provide their Email address and password.
     USERNAME_FIELD = 'email' # By default, Required_Field.
-    REQUIRED_FIELDS = ['name']
+    REQUIRED_FILEDS = ['name']
 
     def get_full_name(self):
         '''Returns Full Name of User'''
