@@ -10,7 +10,7 @@ from rest_framework import status
 from . import serializers 
 # Import serializers.py File we made in current App folder. We use it to tell our API view what data to expect when making post,put & patch requests to our API.
 
-
+from rest_framework import viewsets
 
 # Create your views here.
 
@@ -72,3 +72,43 @@ class HelloApiView(APIView):
     def delete(self, request, pk=None):
         '''Delete an Object'''
         return Response({'method':'DELETE'})
+
+class HelloViewSet(viewsets.ViewSet):
+    '''To see the working of ViewSet'''
+    serializer_class = serializers.HelloSerializer
+
+    def list(self, request):
+        ''''Returns a Hello Message '''
+        viewset_features = [
+            'Uses Actions(list,create,retrieve,update,partial_update)',
+            'Automatically maps to URLs through Routers',
+            'Provides More functionality with less code']
+
+        return Response({'Mssg':'Hello, Mate', 'ViewSet_features' :viewset_features })
+    
+    def create(self, request):
+        '''Create a New Hello Message'''
+        serializer = self.serializer_class(data = request.data)
+
+        if serializer.is_valid():
+            serializer.validated_data.get('name')
+            message = f"Namaste, {name}"
+            return Response({'Message' : message})
+        else:
+            return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, pk=None):
+        '''Handle getting an Object by its id'''
+        return Response({'method':'RETRIEVE'})
+
+    def update(self, request, pk=None):
+        '''Handle updating an Object'''
+        return Response({'method':'UPDATE'})
+
+    def partial_update(self, request, pk=None):
+        '''Handle Partially updating an Object'''
+        return Response({'method':'PARTIAL_UPDATE'})
+
+    def destroy(self, request, pk=None):
+        '''Handle REMOVING an Object'''
+        return Response({'method':'DESTROY'})
