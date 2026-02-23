@@ -11,6 +11,14 @@ from . import serializers
 # Import serializers.py File we made in current App folder. We use it to tell our API view what data to expect when making post,put & patch requests to our API.
 
 from rest_framework import viewsets
+from . import models
+
+from rest_framework.authentication import TokenAuthentication
+# TokenAuthentication works by generating a random token string when the user logs in and then every request we make to their API that we need to authenticate we add this token string to the request and that's effectively a password to check that every request made is authenticated correctly. We're going to configure this on our Model ViewSet. This enables us to configure the Model ViewSet to use our Custom Permission Class in permissions.py
+from . import permissions
+
+from rest_framework import filters
+# Used for Implementaion of User Profile Search.
 
 # Create your views here.
 
@@ -112,3 +120,31 @@ class HelloViewSet(viewsets.ViewSet):
     def destroy(self, request, pk=None):
         '''Handle REMOVING an Object'''
         return Response({'method':'DESTROY'})
+
+# Using Model ViewSet as It's specifically designed for managing models through our API.Below Viewset is for accessing the UserProfile Model Serializer through an endpoint.
+class UserProfileViewSet(viewsets.ModelViewSet):
+    '''API for Handling Creation and Update of User Profiles'''
+    serializer_class = serializers.UserProfileSerializer
+    # Model Serializer Created in serializers.py File in same APP folder.
+
+    # Just like in regular ViewSets, You provide a QuerySet to the Model ViewSet so it knows which objects in the database are going to be managed through this ViewSet.
+    queryset = models.UserProfile.objects.all() 
+    #? all(): Query Method to retrieve all rows/Objects from DB Table/Model
+
+    ''''
+    The Django REST framework knows the standard functions that you would want to perform on a Model ViewSet.Those Functions are the create function to create new items,the list function to list the models that are in the database, the update, partial update and destroy functions to manage specific model objects in the database. 
+    '''
+    # Django REST framework takes care of all of this for us just by assigning the serializer_class to a Model Serializer and the QuerySet.This is the great thing about the Model ViewSet.
+    
+    # You can configure one or more types of authentication with a particular view set in the Django rest framework. The way it works is you just add all the types of authentication classes you want to this authentication_classes variable
+    authentication_classes = (TokenAuthentication,) #? , is Used to ensure authentication_classes is a Tuple rather than a Single Object.
+
+    # Next we're going to add the permission_classes Variable which sets how the user gets certain Permissions.
+    permission_classes = (permissions.UpdateOwnProfile,)
+
+    filter_backends = (filters.SearchFilter,)
+    # This line tells Django REST Framework: “Apply the SearchFilter backend to this ViewSet.” In simple words: It enables search functionality on your API endpoint. We can add Multiple Filter backends to a ViewSet.
+
+    search_fields = ('name', 'email', )
+    # This line means that the Django rest framework will allow us to search for items in this ViewSet by the name or email field.
+    

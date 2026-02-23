@@ -56,7 +56,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False) 
     # is_staff Column determines which users will have admin Access
     
-    # We need to specify the model manager that we're going to use for the objects and this is required for because we need to use our custom user model with the Django CLI so Django needs to have a custom model manager for the user model so it knows how to create users and control users using the Django command line tools.
+    # We need to specify the model manager what we're going to use for the objects and this is required for because we need to use our custom user model with the Django CLI so Django needs to have a custom model manager for the user model so it knows how to create users and control users using the Django command line tools.
 
     objects = UserProfileManager() # We will create a User Profile Manager Class and then work on this line further.
 
