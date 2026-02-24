@@ -13,12 +13,26 @@ from . import serializers
 from rest_framework import viewsets
 from . import models
 
+'''Libraries Required for Ensuring Only Authenticated Users can Update their Own Profile using Permissions and Authentication Modules in Django REST Framework.'''
 from rest_framework.authentication import TokenAuthentication
 # TokenAuthentication works by generating a random token string when the user logs in and then every request we make to their API that we need to authenticate we add this token string to the request and that's effectively a password to check that every request made is authenticated correctly. We're going to configure this on our Model ViewSet. This enables us to configure the Model ViewSet to use our Custom Permission Class in permissions.py
 from . import permissions
 
+'''Libraries Required for User Profile Search Functionality'''
 from rest_framework import filters
 # Used for Implementaion of User Profile Search.
+
+'''Libraries Required for Login API'''
+from rest_framework.authtoken.views import ObtainAuthToken 
+#  ObtainAuthToken is a Class-Based View that comes with the Django REST framework that we can use to generate an auth token.
+
+from rest_framework.settings import api_settings
+# We need the DEFAULT_RENDERER_CLASSES object in api_settings Module/class for our Login API.
+
+'''Library required in ViewSet for Profile Feed Items API'''
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+# When a ViewSet is Configured with permission: IsAuthenticatedOrReadOnly, then that means this ViewSet will be Read-only for Unauthenticated Users.
+# If you want API to be accessible ONLY to authenticated Users, use just IsAuthenticated Permission. This is Mostly used in real Projects
 
 # Create your views here.
 
@@ -147,4 +161,45 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
     search_fields = ('name', 'email', )
     # This line means that the Django rest framework will allow us to search for items in this ViewSet by the name or email field.
-    
+
+
+# Class-Based View for the User Login API which is a CHILD Class of ObtainAuthToken Class(Class-based View)
+class UserLoginApiView(ObtainAuthToken):
+    '''Handles Creating User Authentication Tokens'''
+    # ObtainAuthToken is a Class-Based VIew already available in Django REST Framework. So why do we need our Custom API Login View to handle user authentication tokens? This is becz ObtainAuthToken Class is NOT Visible in Browsable APIs. So, we need to customize it so that we can see and test in our Browsable API.
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+    # What this line does is it adds the renderer_classes to our ObtainAuthToken Class-Based View which will enable it in the Django admin. The rest of the ViewSets, APIViews and other things that are provided by the Django admin have this by default but the ObtainAuthToken View doesn't have it by default.So we need to add it manually
+
+
+
+class ProfileFeedItemViewSet(viewsets.ModelViewSet):
+    '''Handles Creating, Reading and Updating profile feed items.'''
+    # We're going to use the token authentication to authenticate requests to our endpoints that we are gonna assign to this viewset.
+    authentication_classes = (TokenAuthentication,)
+
+    # Next we're going to set the serializer_class to the serializer we made previuosly for ProfileFeedItems Model in serializers.py file in the APP folder.
+    serializer_class = serializers.ProfileFeedItemSerializer
+
+    # Next we are adding the Queryset.
+    queryset = models.ProfileFeedItems.objects.all()
+    # In a ModelViewSet, the queryset tells DRF: “These are the objects from the database that this API should work with.” It defines the data source for the ViewSet.
+    # Think of queryset as: “The pool of data this API is allowed to touch.” Everything DRF does (retrieve, update, delete) starts from that pool.
+
+    permission_classes = (IsAuthenticatedOrReadOnly, permissions.UpdateOnlyOwnStatus)
+
+    # We have set the user_profile Field of ProfileFeedItems Model to read_only because we're going to set it based on the Authenticated User. We need to explicitly define this here so that after creation of ProfileFeedItems Object, this field will be made read_only. 
+    # We do this in Model ViewSet Using perform_create() Method.
+    def perform_create(self, serializer):
+        '''Set User Profile to Logged in User'''
+        # The perform_create function is a handy feature of the Django rest framework that allows you to override the behavior or customize the behavior for creating objects through a Model ViewSet.
+        # So when a request gets made to our ViewSet it gets passed into our Serializer class assigned to that Viewset(line 176) and Validated and then the serializer.save() function is called by default.
+        # If we need to customize the logic for creating an object then we can do this using the perform_create function which gets called Every time you do an HTTP POST to our ViewSet.
+        
+        serializer.save(user_profile = self.request.user)
+        #  Django rest framework calls perform_create and it passes in the serializer that we're using to create the object. This serializer is a Model Serializer. So it has a save function assigned to it and that save function is used to save the contents of the serializer to an object in the database table.
+        # What we're doing here is we are calling serializer.save() and we're passing in the user_profile Field in addition to all of the other remaining Fields of the ProfileFeedItems Model in the serializer that have been validated.
+
+        # The request object is an object that gets passed into all ViewSets every time a request is made and as the name suggests it contains all of the details about the request being made to the ViewSet.Because we've added the token authentication to our view set if the user has been authenticated then the request will have a user field associated to the authenticated user.So this user field gets added whenever the useris authenticated. If they're not authenticated then it's just set to an anonymous user account
+
+
+

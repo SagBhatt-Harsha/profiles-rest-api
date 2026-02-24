@@ -19,3 +19,12 @@ class UpdateOwnProfile(permissions.BasePermission):
         # Now we need to handle what happens if the request is not in the safe methods for example if they are trying to do a HTTP put to update an object. What we're going to do is we're going to check whether the object they're updating matches their authenticated user profile that is added to the authentication of the request.When you authenticate a request in Django rest framework it will assign the authenticated user profile to the request and we can use this to compare it to the object(obj) that is being updated and make sure they have the same ID.
         return obj.id == request.user.id
         # obj.id refers to id of object being updated and request.user.id refers to id of authenticated User Profile
+
+class UpdateOnlyOwnStatus(permissions.BasePermission):
+    '''Allow Auth. Users to Update Status of Profile Feed Items only when they are related to that User"s Profile. '''
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        
+        return obj.user_profile.id == request.user.id
+        # Authenticated Users should be able to Update ONLY those Profile Feed items that are Associated with that Authenticated User’s profile.

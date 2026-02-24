@@ -65,6 +65,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
         # Once that's done, we use super().update() to pass the values to the existing DRF update() method, to handle updating the remaining fields.
         return super().update(instance, validated_data)
     
+class ProfileFeedItemSerializer(serializers.ModelSerializer):
+    '''Serializes User Profile Feed Item Objects i.e. Converts Objects to JSON Format'''
+    class Meta:
+        model = models.ProfileFeedItems #? Assigning this Serializer to ProfileFeedItems Model.
+        fields = ('id', 'user_profile', 'status_text', 'created_on')
+        # Jab Object ko JSON format ke convert karenga, tab usme kaunse Fields honge is def. by above Line.
+
+        # We don't want the users to be able to Set the user_profile Forein Key when they create a new feed item. We want to set the user profile based on the user that is AUTHENTICATED. I don't want one user to be able to create a new profile feed item and assign that to another user because that would be a security flaw in the system.
+
+        # So we want to set user_profile to the Authenticated user and therefore we're going to make the user profile field read-only.So that means that when we list the objects we can see which users created which feed items but when we create an object it can only be assigned to the current user that is authenticated.
+
+        #? For this, we use the extra_kwargs Variable.
+        extra_kwargs = {'user_profile':{
+            'read_only' : 'True'} 
+            } 
 
 
    

@@ -1,9 +1,13 @@
-from django.db import models
+from django.db import models # There, by Default
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 # These are the standard base classes that we need to use when Overriding or Customizing the default Django user model.This is described in the Django official documentation.
 
 from django.contrib.auth.models import BaseUserManager
 # Importing the Default User Manager Model/Class Above.
+
+from django.conf import settings
+# We import the settings.py in the Main Project Folder because we want to use the setting:AUTH_USER_MODEL defined in that file here in the Model for storing Profile Feed items in the DB.
+
 
 # Create your models here.
 
@@ -77,9 +81,27 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
         '''Returns String Representation of our User.'''
         return self.email
 
+# We use below Model to allow users to store Status Updates in the system.
+class ProfileFeedItems(models.Model):
+    '''For Storing User Profile Update Status in DB '''
+    # So every time any user creates a new update it's going to create a new Profile Feed Item Object and associate that object with the user that created it.
+    # The way you link models to other models in Django is you use what's called a foreign key.The benefit of doing this is that it allows you to ensure that the integrity of the database is maintained so you can never create a profile feed item for a user profile that doesn't exist.
+
+    user_profile = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete = models.CASCADE 
+        #What is models.CASCADE? models.CASCADE tells Django: "If the referenced object is deleted, also delete this object" It defines what should happen when the related object is deleted. If a particular user Profile is removed, then all the Feed items in the DB that have the Foreign Key Relationsip between them will also be removed.
+    )
+    #? 1st Argument of ForeignKey() Method:
+    # 1st Arg. is the Remote Model we are linking this Model to. Now we could have simply written Name of that Remote Model(UserProfile) in the 1st Arg and it would have worked. But we don't do that. It is Best Practice not to Hardcode(write name of the Remote Model) the Foreign Key Definition. We have used the setting AUTH_USER_MODEL from settings.py FIle as the 1st Arg.. This setting refers to the Model Currently being Used for User Authentication. If we change the model being used for User Auth. at any time, we will have to change all the Code that uses the foreign key if we hardcode it. If we use the setting, only that setting will change and we don't need to make any other modifications in any code. 
+
+    status_text = models.CharField(max_length=255)
+    # status_text is going to be used to Contain the text of the feed update.
     
+    created_on = models.DateTimeField(auto_now_add = True)
+    # Any time a User Profile Feed item is created and stored in DB,the TimeStamp of its creation is also added to the DB as a field of this model through auto_now_add Property
 
-
-
-
-
+    def __str__():
+        '''Defines String Representation of the Model'''
+        # String Representation: Suppose I make a object of this Class: obj1. Using default __str__() predefined in Django, print(obj1) will give O/p: ProfileFeedItems object 1. But, using this definition of __str__(), print (obj1) will display the Value of the status_text Attribute of this Class.
+        return self.status_text

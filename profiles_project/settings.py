@@ -122,5 +122,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# This line makes Django use our Custom User Profile Model as the Default User Profile Model. profiles_api is the Name of Folder containing models.py File and UserProfile is the name of the custom User Model.
+# Below line makes Django use our Custom User Profile Model as the Default User Authentication Model. profiles_api is the Name of APP Folder containing models.py File and UserProfile is the name of the custom User Model.
 AUTH_USER_MODEL = "profiles_api.UserProfile"
